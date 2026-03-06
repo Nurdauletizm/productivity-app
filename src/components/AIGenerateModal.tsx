@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Sparkles, X, Loader2, Target } from "lucide-react";
-import useSWR from "swr";
+import useSWR, { mutate } from "swr";
 import { fetcher } from "@/lib/fetcher";
 
 interface Goal {
@@ -46,9 +46,16 @@ export function AIGenerateModal({ isOpen, onClose, onSuccess, defaultGoalId, hid
                 }),
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const data = await response.json();
                 throw new Error(data.message || "Failed to generate tasks.");
+            }
+
+            // If the AI decided to create a completely new Goal, we must refresh the Goals List.
+            if (data.intent === "NEW_GOAL") {
+                // SWR global mutate using the exact key
+                mutate("/api/goals");
             }
 
             setPrompt("");
