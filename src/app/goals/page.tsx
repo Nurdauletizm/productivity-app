@@ -3,33 +3,16 @@
 import { Goal, GoalCard } from "@/components/GoalCard";
 import { NewGoalModal } from "@/components/NewGoalModal";
 import { Plus } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 
 import { EditGoalModal } from "@/components/EditGoalModal";
 
 export default function GoalsPage() {
-    const [goals, setGoals] = useState<Goal[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { data: goals, isLoading, mutate } = useSWR<Goal[]>("/api/goals", fetcher);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
-
-    useEffect(() => {
-        fetchGoals();
-    }, []);
-
-    const fetchGoals = async () => {
-        try {
-            setIsLoading(true);
-            const res = await fetch("/api/goals");
-            if (!res.ok) throw new Error("Failed to fetch goals");
-            const data = await res.json();
-            setGoals(data);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleCreateGoal = async (title: string, description: string, deadline: string) => {
         try {
@@ -40,7 +23,7 @@ export default function GoalsPage() {
             });
             if (!res.ok) throw new Error("Failed to create goal");
 
-            fetchGoals();
+            mutate();
         } catch (error) {
             console.error(error);
         }
@@ -55,7 +38,7 @@ export default function GoalsPage() {
             });
             if (!res.ok) throw new Error("Failed to update goal");
 
-            fetchGoals();
+            mutate();
         } catch (error) {
             console.error(error);
         }
@@ -68,7 +51,7 @@ export default function GoalsPage() {
             });
             if (!res.ok) throw new Error("Failed to delete goal");
 
-            fetchGoals();
+            mutate();
         } catch (error) {
             console.error(error);
         }
@@ -94,7 +77,7 @@ export default function GoalsPage() {
             </header>
 
             <main className="flex-1 p-8 overflow-y-auto">
-                {isLoading ? (
+                {isLoading || !goals ? (
                     <div className="flex justify-center text-gray-400 mt-10">Loading goals...</div>
                 ) : goals.length === 0 ? (
                     <div className="flex flex-col items-center justify-center text-center mt-20">

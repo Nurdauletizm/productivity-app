@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { useParams, useRouter } from "next/navigation";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { NewTaskModal } from "@/components/NewTaskModal";
@@ -17,11 +19,21 @@ export default function GoalDetailPage() {
     const router = useRouter();
     const goalId = params.id as string;
 
-    const [goal, setGoal] = useState<Goal | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { data: goal, isLoading, error } = useSWR<Goal>(
+        goalId ? `/api/goals/${goalId}` : null,
+        fetcher,
+        {
+            onError: (err) => {
+                console.error("Error fetching goal:", err);
+                router.push("/goals");
+            }
+        }
+    );
+
+    // State for task modal
     const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
     const [newTaskTrigger, setNewTaskTrigger] = useState<{
-        id: string; // Temporarily generated ID for KanbanBoard prop type
+        id: string;
         title: string;
         description: string;
         deadline: string;
@@ -29,28 +41,6 @@ export default function GoalDetailPage() {
         goalId: string;
         labels: string[];
     } | null>(null);
-
-    useEffect(() => {
-        const fetchGoalDetails = async () => {
-            try {
-                const res = await fetch(`/api/goals/${goalId}`);
-                if (!res.ok) {
-                    throw new Error("Goal not found");
-                }
-                const data = await res.json();
-                setGoal(data);
-            } catch (error) {
-                console.error("Error fetching goal:", error);
-                router.push("/goals");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        if (goalId) {
-            fetchGoalDetails();
-        }
-    }, [goalId, router]);
 
     if (isLoading) {
         return (
@@ -60,7 +50,7 @@ export default function GoalDetailPage() {
         );
     }
 
-    if (!goal) return null;
+    if (!goal || error) return null;
 
     const handleCreateTask = (title: string, description: string, deadline: string, status: any, goalId: string, labels: string[]) => {
         setNewTaskTrigger({

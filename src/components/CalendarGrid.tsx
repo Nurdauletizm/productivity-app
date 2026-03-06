@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import {
     format,
     addMonths,
@@ -23,39 +25,19 @@ import { NewTaskModal } from "./NewTaskModal";
 
 export function CalendarGrid() {
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
     const [selectedDay, setSelectedDay] = useState<Date | null>(null);
     const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
     const [newTaskDate, setNewTaskDate] = useState<Date | null>(null);
 
-    useEffect(() => {
-        const fetchTasks = async () => {
-            try {
-                setIsLoading(true);
-                const res = await fetch("/api/tasks");
-                if (!res.ok) throw new Error("Failed to fetch tasks");
-                const data = await res.json();
+    const { data: rawTasks, isLoading, mutate } = useSWR<Task[]>("/api/tasks", fetcher);
 
-                // Format labels safely from SQLite string type
-                const formattedTasks = data.map((task: any) => ({
-                    ...task,
-                    labels: typeof task.labels === 'string' && task.labels.trim() !== ''
-                        ? task.labels.split(',')
-                        : task.labels || []
-                }));
-
-                setTasks(formattedTasks);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchTasks();
-    }, []);
+    const tasks = rawTasks ? rawTasks.map((task: any) => ({
+        ...task,
+        labels: typeof task.labels === 'string' && task.labels.trim() !== ''
+            ? task.labels.split(',')
+            : task.labels || []
+    })) : [];
 
     const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
     const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
@@ -70,7 +52,7 @@ export function CalendarGrid() {
 
     const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-    if (isLoading) {
+    if (isLoading || !rawTasks) {
         return <div className="flex h-full items-center justify-center text-gray-400">Loading calendar...</div>;
     }
 
@@ -95,9 +77,7 @@ export function CalendarGrid() {
                     : rawTask.labels || []
             }
 
-            setTasks((prevTasks) =>
-                prevTasks.map(t => t.id === taskId ? formattedTask : t)
-            );
+            mutate();
         } catch (error) {
             console.error("Error updating task in calendar:", error);
         }
@@ -269,7 +249,7 @@ export function CalendarGrid() {
                                                 <div className="flex items-center gap-4 mt-1">
                                                     {Array.isArray(task.labels) && task.labels.length > 0 && (
                                                         <div className="flex flex-wrap gap-1">
-                                                            {task.labels.map((label, i) => (
+                                                            {task.labels.map((label: string, i: number) => (
                                                                 <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded">
                                                                     #{label}
                                                                 </span>
@@ -315,8 +295,7 @@ export function CalendarGrid() {
                             })
                         });
                         if (res.ok) {
-                            const createdTask = await res.json();
-                            setTasks(prev => [...prev, createdTask]);
+                            mutate();
                         }
                     } catch (e) { console.error(e) }
                 }}

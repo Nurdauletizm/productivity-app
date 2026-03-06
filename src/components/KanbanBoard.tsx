@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import useSWR from "swr";
+import { fetcher } from "@/lib/fetcher";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { KanbanColumn } from "./KanbanColumn";
 import { EditTaskModal } from "./EditTaskModal";
@@ -45,23 +47,20 @@ interface KanbanBoardProps {
 export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
     const [data, setData] = useState<BoardData>(emptyData);
     const [isClient, setIsClient] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+    const { data: dbTasks, isLoading, mutate } = useSWR<Task[]>(
+        goalId ? `/api/tasks?goalId=${goalId}` : "/api/tasks",
+        fetcher
+    );
 
     // Fix hydration issues with drag and drop
     useEffect(() => {
         setIsClient(true);
-        fetchTasks();
-    }, [goalId]);
+    }, []);
 
-    const fetchTasks = async () => {
-        try {
-            setIsLoading(true);
-            const url = goalId ? `/api/tasks?goalId=${goalId}` : "/api/tasks";
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("Failed to fetch tasks");
-            const dbTasks: Task[] = await res.json();
-
+    useEffect(() => {
+        if (dbTasks) {
             const newData: BoardData = JSON.parse(JSON.stringify(emptyData)); // deep copy empty struct
 
             dbTasks.forEach((dbTask: any) => {
@@ -81,12 +80,8 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
             });
 
             setData(newData);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setIsLoading(false);
         }
-    };
+    }, [dbTasks]);
 
     // Listen for new tasks created from the modal
     useEffect(() => {
@@ -131,6 +126,8 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
                             }
                         };
                     });
+
+                    mutate();
                 } catch (error) {
                     console.error(error);
                 }
@@ -200,17 +197,18 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: finishColumn.id })
             });
+            mutate();
         } catch (error) {
             console.error("Failed to update task status in DB", error);
             // Optional: rollback UI state here if database fails
         }
-    }, [data]);
+    }, [data, mutate]);
 
     if (!isClient) {
         return null;
     }
 
-    if (isLoading) {
+    if (isLoading || !dbTasks) {
         return <div className="h-full flex items-center justify-center text-gray-400">Loading board...</div>;
     }
 
@@ -259,6 +257,8 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
 
                 return newData;
             });
+
+            mutate();
         } catch (error) {
             console.error(error);
         }
@@ -287,6 +287,7 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
                 return newData;
             });
             setSelectedTask(null);
+            mutate();
         } catch (error) {
             console.error(error);
         }
