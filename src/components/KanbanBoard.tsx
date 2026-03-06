@@ -109,9 +109,13 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
                         if (prevData.tasks[createdTask.id]) return prevData;
 
                         const colId = createdTask.status as TaskStatus;
+                        // Determine the target column. If AI hallucinated a status, fallback to BACKLOG
+                        const targetColumn = prevData.columns[colId] || prevData.columns.BACKLOG;
+                        const targetColId = targetColumn.id;
+
                         const newColumn = {
-                            ...prevData.columns[colId],
-                            taskIds: [createdTask.id, ...prevData.columns[colId].taskIds]
+                            ...targetColumn,
+                            taskIds: [createdTask.id, ...targetColumn.taskIds]
                         };
 
                         return {
@@ -122,7 +126,7 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
                             },
                             columns: {
                                 ...prevData.columns,
-                                [colId]: newColumn
+                                [targetColId]: newColumn
                             }
                         };
                     });
