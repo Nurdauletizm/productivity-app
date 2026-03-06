@@ -85,10 +85,13 @@ export function Sidebar() {
                     </button>
                 )}
 
-                <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 dark:text-zinc-400 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800/50 hover:text-black dark:hover:text-white transition-colors">
+                <Link
+                    href="/settings"
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 dark:text-zinc-400 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800/50 hover:text-black dark:hover:text-white transition-colors"
+                >
                     <Settings className="w-5 h-5 text-gray-400 dark:text-zinc-500" />
                     Settings
-                </button>
+                </Link>
 
                 <button
                     onClick={() => signOut({ callbackUrl: "/login" })}
