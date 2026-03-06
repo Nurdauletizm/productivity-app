@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "@/components/Providers";
+import { SidebarWrapper } from "@/components/SidebarWrapper";
 
 export default function RootLayout({
   children,
@@ -31,7 +32,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 text-gray-900 flex h-screen overflow-hidden`}
       >
         <Providers>
-          <Sidebar />
+          <SidebarWrapper />
           <main className="flex-1 overflow-y-auto">
             {children}
           </main>
