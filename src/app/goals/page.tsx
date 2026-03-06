@@ -2,16 +2,18 @@
 
 import { Goal, GoalCard } from "@/components/GoalCard";
 import { NewGoalModal } from "@/components/NewGoalModal";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
 
 import { EditGoalModal } from "@/components/EditGoalModal";
+import { AIGenerateModal } from "@/components/AIGenerateModal";
 
 export default function GoalsPage() {
     const { data: goals, isLoading, mutate } = useSWR<Goal[]>("/api/goals", fetcher);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isAIGenerateModalOpen, setIsAIGenerateModalOpen] = useState(false);
     const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
 
     const handleCreateGoal = async (title: string, description: string, deadline: string) => {
@@ -112,6 +114,22 @@ export default function GoalsPage() {
                 onClose={() => setEditingGoal(null)}
                 goal={editingGoal}
                 onSubmit={handleEditGoal}
+            />
+
+            {/* AI Generate FAB */}
+            <button
+                onClick={() => setIsAIGenerateModalOpen(true)}
+                className="fixed bottom-8 right-8 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex flex-col items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all z-20 group"
+                title="Generate Plan with AI"
+            >
+                <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-bold mt-0.5 tracking-wider">AI</span>
+            </button>
+
+            <AIGenerateModal
+                isOpen={isAIGenerateModalOpen}
+                onClose={() => setIsAIGenerateModalOpen(false)}
+                onSuccess={() => mutate()}
             />
         </div>
     );
