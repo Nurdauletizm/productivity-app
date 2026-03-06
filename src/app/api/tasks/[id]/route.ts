@@ -9,9 +9,12 @@ export async function PATCH(
 ) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { id } = await params;
         const body = await request.json();
@@ -26,7 +29,7 @@ export async function PATCH(
         if (goalId !== undefined) updateData.goalId = goalId;
 
         const updatedTask = await prisma.task.update({
-            where: { id, userId: session.user.id },
+            where: { id, userId: user.id },
             data: updateData,
         });
 
@@ -43,13 +46,16 @@ export async function DELETE(
 ) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
         const { id } = await params;
         await prisma.task.delete({
-            where: { id, userId: session.user.id },
+            where: { id, userId: user.id },
         });
 
         return new NextResponse(null, { status: 204 });

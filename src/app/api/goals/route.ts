@@ -6,12 +6,15 @@ import { authOptions } from "@/lib/auth";
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
         const goals = await prisma.goal.findMany({
-            where: { userId: session.user.id },
+            where: { userId: user.id },
             include: {
                 tasks: true,
             },
@@ -43,9 +46,12 @@ export async function GET() {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await request.json();
         const { title, description, deadline } = body;
@@ -55,7 +61,7 @@ export async function POST(request: Request) {
                 title,
                 description,
                 deadline,
-                userId: session.user.id,
+                userId: user.id,
             },
         });
 

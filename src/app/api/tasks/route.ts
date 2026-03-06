@@ -6,16 +6,19 @@ import { authOptions } from "@/lib/auth";
 export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { searchParams } = new URL(request.url);
         const goalId = searchParams.get("goalId");
 
         const tasks = await prisma.task.findMany({
             where: {
-                userId: session.user.id,
+                userId: user.id,
                 ...(goalId ? { goalId } : {})
             },
             orderBy: { createdAt: "desc" },
@@ -30,9 +33,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await request.json();
         const { title, description, deadline, status, labels, goalId } = body;
@@ -43,9 +49,9 @@ export async function POST(request: Request) {
                 description,
                 deadline,
                 status: status || "BACKLOG",
-                labels: labels ? labels.join(",") : null,
+                labels: labels && Array.isArray(labels) ? labels.join(",") : labels || null,
                 goalId: goalId || null,
-                userId: session.user.id,
+                userId: user.id,
             },
         });
 

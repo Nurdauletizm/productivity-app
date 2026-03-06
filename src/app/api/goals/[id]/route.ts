@@ -9,13 +9,16 @@ export async function GET(
 ) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
         const { id } = await params;
         const goal = await prisma.goal.findUnique({
-            where: { id, userId: session.user.id },
+            where: { id, userId: user.id },
         });
 
         if (!goal) return NextResponse.json({ error: "Goal not found" }, { status: 404 });
@@ -33,9 +36,12 @@ export async function PATCH(
 ) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { id } = await params;
         const body = await request.json();
@@ -47,7 +53,7 @@ export async function PATCH(
         if (deadline !== undefined) updateData.deadline = deadline;
 
         const updatedGoal = await prisma.goal.update({
-            where: { id, userId: session.user.id },
+            where: { id, userId: user.id },
             data: updateData,
         });
 
@@ -64,15 +70,18 @@ export async function DELETE(
 ) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const { id } = await params;
 
         // The schema uses onDelete: Cascade for User references, but Goal to Task is SetNull.
         await prisma.goal.delete({
-            where: { id, userId: session.user.id },
+            where: { id, userId: user.id },
         });
 
         return new NextResponse(null, { status: 204 });
