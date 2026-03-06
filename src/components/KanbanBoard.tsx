@@ -209,7 +209,7 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
     }
 
     if (isLoading || !dbTasks) {
-        return <div className="h-full flex items-center justify-center text-gray-400">Loading board...</div>;
+        return <div className="h-full flex items-center justify-center text-gray-400 dark:text-zinc-500 transition-colors">Loading board...</div>;
     }
 
     const handleTaskClick = (task: Task) => {

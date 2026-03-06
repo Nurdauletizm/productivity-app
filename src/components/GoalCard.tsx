@@ -40,18 +40,18 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
     const isOverdue = !isCompleted && goal.deadline && isPast(startOfDay(parseISO(goal.deadline)));
 
     // Dynamic styling
-    let cardStyle = "border-gray-100 bg-white";
-    let iconStyle = "bg-blue-50 text-blue-600";
-    let progressBarStyle = "bg-black";
+    let cardStyle = "border-gray-100 dark:border-zinc-800 bg-white dark:bg-zinc-900";
+    let iconStyle = "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400";
+    let progressBarStyle = "bg-black dark:bg-white";
 
     if (isCompleted) {
-        cardStyle = "border-green-200 bg-green-50/30";
-        iconStyle = "bg-green-100 text-green-700";
-        progressBarStyle = "bg-green-500";
+        cardStyle = "border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-900/10";
+        iconStyle = "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400";
+        progressBarStyle = "bg-green-500 dark:bg-green-400";
     } else if (isOverdue) {
-        cardStyle = "border-red-200 bg-red-50/30";
-        iconStyle = "bg-red-100 text-red-700";
-        progressBarStyle = "bg-red-500";
+        cardStyle = "border-red-200 dark:border-red-900/50 bg-red-50/30 dark:bg-red-900/10";
+        iconStyle = "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";
+        progressBarStyle = "bg-red-500 dark:bg-red-400";
     }
 
     return (
@@ -61,7 +61,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconStyle}`}>
                         <Target className="w-5 h-5" />
                     </div>
-                    <h3 className="font-semibold text-lg text-gray-900 line-clamp-1 pr-6">{goal.title}</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-zinc-100 line-clamp-1 pr-6">{goal.title}</h3>
                 </Link>
 
                 {/* Actions Dropdown */}
@@ -71,20 +71,20 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
                             e.preventDefault();
                             setIsMenuOpen(!isMenuOpen);
                         }}
-                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        className="p-1.5 text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
                     >
                         <MoreHorizontal className="w-5 h-5" />
                     </button>
 
                     {isMenuOpen && (
-                        <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-100 rounded-xl shadow-lg py-1 z-10 animate-in fade-in slide-in-from-top-2 duration-100">
+                        <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-zinc-800 border border-gray-100 dark:border-zinc-700 rounded-xl shadow-lg py-1 z-10 animate-in fade-in slide-in-from-top-2 duration-100">
                             <button
                                 onClick={(e) => {
                                     e.preventDefault();
                                     setIsMenuOpen(false);
                                     onEdit?.(goal);
                                 }}
-                                className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                className="w-full text-left px-3 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-700/50 flex items-center gap-2 transition-colors"
                             >
                                 <Edit2 className="w-4 h-4" />
                                 Edit Goal
@@ -97,7 +97,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
                                         onDelete?.(goal.id);
                                     }
                                 }}
-                                className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                className="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 flex items-center gap-2 transition-colors"
                             >
                                 <Trash2 className="w-4 h-4" />
                                 Delete
@@ -108,22 +108,22 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
             </div>
 
             {goal.description && (
-                <p className="text-gray-500 text-sm mb-6 line-clamp-2 flex-grow">
+                <p className="text-gray-500 dark:text-zinc-400 text-sm mb-6 line-clamp-2 flex-grow">
                     {goal.description}
                 </p>
             )}
 
             {/* Progress Bar Section */}
-            <div className="mt-auto pt-4 border-t border-gray-50">
+            <div className="mt-auto pt-4 border-t border-gray-50 dark:border-zinc-800/50">
                 <div className="flex justify-between items-end mb-2">
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-zinc-400">
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
                         <span>{goal.tasksCompleted} / {goal.tasksTotal} tasks</span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">{progressPercent}%</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-zinc-100">{progressPercent}%</span>
                 </div>
 
-                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 w-full bg-gray-100 dark:bg-zinc-800 rounded-full overflow-hidden">
                     <div
                         className={`h-full rounded-full transition-all duration-500 ease-out ${progressBarStyle}`}
                         style={{ width: `${progressPercent}%` }}
@@ -131,7 +131,7 @@ export function GoalCard({ goal, onEdit, onDelete }: GoalCardProps) {
                 </div>
 
                 {goal.deadline && (
-                    <div className={`flex items-center gap-1 mt-4 text-xs font-medium ${isOverdue && !isCompleted ? 'text-red-500' : 'text-gray-400'}`}>
+                    <div className={`flex items-center gap-1 mt-4 text-xs font-medium ${isOverdue && !isCompleted ? 'text-red-500' : 'text-gray-400 dark:text-zinc-500'}`}>
                         <CalendarIcon className="w-3.5 h-3.5" />
                         <span>Due {new Date(goal.deadline).toLocaleDateString()}</span>
                     </div>

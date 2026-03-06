@@ -44,8 +44,8 @@ export default function GoalDetailPage() {
 
     if (isLoading) {
         return (
-            <div className="flex h-full items-center justify-center bg-gray-50">
-                <p className="text-gray-400">Loading goal details...</p>
+            <div className="flex h-full items-center justify-center bg-gray-50 dark:bg-zinc-900 transition-colors">
+                <p className="text-gray-400 dark:text-zinc-500">Loading goal details...</p>
             </div>
         );
     }
@@ -66,27 +66,27 @@ export default function GoalDetailPage() {
     };
 
     return (
-        <div className="flex flex-col h-full bg-[#fbfbfa]">
-            <header className="px-8 py-6 border-b border-gray-100 flex items-center gap-4 bg-white/80 backdrop-blur-sm sticky top-0 z-10 shrink-0">
+        <div className="flex flex-col h-full bg-[#fbfbfa] dark:bg-[#0a0a0a] transition-colors">
+            <header className="px-8 py-6 border-b border-gray-100 dark:border-zinc-800 flex items-center gap-4 bg-white/80 dark:bg-[#121212]/80 backdrop-blur-sm sticky top-0 z-10 shrink-0 transition-colors">
                 <button
                     onClick={() => router.push("/goals")}
-                    className="p-2 -ml-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 -ml-2 text-gray-400 hover:text-gray-900 dark:hover:text-zinc-100 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </button>
                 <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                        <Target className="w-5 h-5 text-blue-600" />
-                        <h1 className="text-2xl font-semibold text-gray-900 tracking-tight">{goal.title}</h1>
+                        <Target className="w-5 h-5 text-blue-600 dark:text-blue-500" />
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100 tracking-tight">{goal.title}</h1>
                     </div>
                     {goal.description && (
-                        <p className="text-sm text-gray-500 mt-1 max-w-2xl">{goal.description}</p>
+                        <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1 max-w-2xl">{goal.description}</p>
                     )}
                 </div>
                 <div className="ml-auto">
                     <button
                         onClick={() => setIsNewTaskModalOpen(true)}
-                        className="flex items-center gap-2 bg-black hover:bg-gray-800 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
+                        className="flex items-center gap-2 bg-black dark:bg-white hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-black px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
                     >
                         <Plus className="w-4 h-4" />
                         New Task

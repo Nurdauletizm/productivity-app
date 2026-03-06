@@ -53,7 +53,7 @@ export function CalendarGrid() {
     const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
     if (isLoading || !rawTasks) {
-        return <div className="flex h-full items-center justify-center text-gray-400">Loading calendar...</div>;
+        return <div className="flex h-full items-center justify-center text-gray-400 dark:text-zinc-500 transition-colors">Loading calendar...</div>;
     }
 
     const handleEditTask = async (taskId: string, updatedData: Partial<Task>) => {
@@ -87,25 +87,25 @@ export function CalendarGrid() {
         <div className="flex flex-col h-full">
             {/* Calendar Header */}
             <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-zinc-100">
                     {format(currentDate, dateFormat)}
                 </h2>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={prevMonth}
-                        className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-600 dark:text-zinc-400 transition-colors"
                     >
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     <button
                         onClick={() => setCurrentDate(new Date())}
-                        className="px-3 py-1.5 text-sm font-medium rounded-md hover:bg-gray-100 text-gray-600 transition-colors"
+                        className="px-3 py-1.5 text-sm font-medium rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-600 dark:text-zinc-400 transition-colors"
                     >
                         Today
                     </button>
                     <button
                         onClick={nextMonth}
-                        className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-800 text-gray-600 dark:text-zinc-400 transition-colors"
                     >
                         <ChevronRight className="w-5 h-5" />
                     </button>
@@ -115,14 +115,14 @@ export function CalendarGrid() {
             {/* Weekday Labels */}
             <div className="grid grid-cols-7 gap-px mb-2">
                 {weekDays.map((day) => (
-                    <div key={day} className="text-center text-xs font-semibold text-gray-500 py-2">
+                    <div key={day} className="text-center text-xs font-semibold text-gray-500 dark:text-zinc-500 py-2">
                         {day}
                     </div>
                 ))}
             </div>
 
             {/* Calendar Grid */}
-            <div className="flex-1 grid grid-cols-7 grid-rows-5 gap-px bg-gray-200 rounded-xl overflow-hidden border border-gray-200">
+            <div className="flex-1 grid grid-cols-7 grid-rows-5 gap-px bg-gray-200 dark:bg-zinc-800 rounded-xl overflow-hidden border border-gray-200 dark:border-zinc-800 transition-colors">
                 {days.map((day, idx) => {
                     const isCurrentMonth = isSameMonth(day, monthStart);
                     const isDayToday = isToday(day);
@@ -138,16 +138,16 @@ export function CalendarGrid() {
                         <div
                             key={idx}
                             onClick={() => setSelectedDay(day)}
-                            className={`min-h-[120px] bg-white p-2 transition-colors relative group hover:bg-gray-50 cursor-pointer ${!isCurrentMonth ? "text-gray-400 bg-gray-50/50" : "text-gray-900"
+                            className={`min-h-[120px] bg-white dark:bg-[#121212] p-2 transition-colors relative group hover:bg-gray-50 dark:hover:bg-zinc-900 cursor-pointer ${!isCurrentMonth ? "text-gray-400 dark:text-zinc-600 bg-gray-50/50 dark:bg-zinc-900/50" : "text-gray-900 dark:text-zinc-200"
                                 }`}
                         >
                             <div className="flex items-center justify-between mb-1">
-                                <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full ${isDayToday ? "bg-black text-white" : ""
+                                <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full ${isDayToday ? "bg-black dark:bg-white text-white dark:text-black" : ""
                                     }`}>
                                     {format(day, "d")}
                                 </span>
                                 <button
-                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded text-gray-400 transition-opacity"
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded text-gray-400 dark:text-zinc-500 transition-opacity"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setNewTaskDate(day);
@@ -186,17 +186,17 @@ export function CalendarGrid() {
             {/* Day Modal */}
             {selectedDay && (
                 <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 text-left">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
-                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
+                    <div className="bg-white dark:bg-[#121212] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[85vh] transition-colors border border-transparent dark:border-zinc-800">
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-zinc-800 sticky top-0 bg-white dark:bg-[#121212] z-10 transition-colors">
                             <div>
-                                <h2 className="text-xl font-semibold text-gray-900">
+                                <h2 className="text-xl font-semibold text-gray-900 dark:text-zinc-100">
                                     {format(selectedDay, "EEEE, MMMM d")}
                                 </h2>
-                                <p className="text-sm text-gray-500">Tasks for this day</p>
+                                <p className="text-sm text-gray-500 dark:text-zinc-400">Tasks for this day</p>
                             </div>
                             <button
                                 onClick={() => setSelectedDay(null)}
-                                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
