@@ -18,7 +18,7 @@ export async function PATCH(
 
         const { id } = await params;
         const body = await request.json();
-        const { status, title, description, deadline, labels, goalId } = body;
+        const { status, title, description, deadline, labels, goalId, checklist } = body;
 
         const updateData: any = {};
         if (status !== undefined) updateData.status = status;
@@ -27,6 +27,7 @@ export async function PATCH(
         if (deadline !== undefined) updateData.deadline = deadline;
         if (labels !== undefined) updateData.labels = labels ? labels.join(",") : null;
         if (goalId !== undefined) updateData.goalId = goalId;
+        if (checklist !== undefined) updateData.checklist = JSON.stringify(checklist);
 
         const updatedTask = await prisma.task.update({
             where: { id, userId: user.id },

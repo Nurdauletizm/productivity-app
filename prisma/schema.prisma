@@ -78,6 +78,7 @@ model Task {
   deadline    String?
   status      String   @default("BACKLOG") // BACKLOG, IN_PROGRESS, DONE
   labels      String?  // Storing as a comma-separated string for simplicity in SQLite
+  checklist   String?  // JSON: [{text: string, done: boolean}]
 
   // Optional relation to Goal
   goalId      String?

@@ -33,13 +33,9 @@ export async function POST(req: Request) {
             weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
 
-        // Call OpenAI API
-        const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
-                {
-                    role: "system",
-                    content: `You are an expert productivity and project management assistant.
+        const forceMultiTask = goalId ? true : false;
+
+        const systemPrompt = `You are an expert productivity and project management assistant.
 The current date and time is: ${todayString}.
 
 Your job is to analyze the user's prompt and understand their INTENT.
@@ -48,20 +44,22 @@ Determine the "intent":
 2. "MULTI_TASK" - if the user is asking to breakdown a plan into steps inside an existing goal, or just a list of unrelated tasks.
 3. "NEW_GOAL" - if the user is asking to create a completely new goal, project, or massive objective, and wants it broken down into tasks.
 
+${forceMultiTask ? 'CRITICAL STRICT INSTRUCTION: The user has ALREADY selected an existing Goal context. You MUST NOT use "NEW_GOAL". Force your "intent" to either "SINGLE_TASK" or "MULTI_TASK".' : ''}
+
 You MUST output ONLY a valid JSON object matching EXACTLY this structure:
 {
   "intent": "SINGLE_TASK" | "MULTI_TASK" | "NEW_GOAL",
   "goal": {
     "title": "Short Goal Title (only fill if intent is NEW_GOAL)",
     "description": "Optional short description for the new goal",
-    "deadlineDaysFromNow": 30 // numeric days to finish goal, or null
+    "deadlineDaysFromNow": 30
   },
   "tasks": [
     {
       "title": "Task title (e.g. Созвон с Тимой в 10:00)",
       "description": "Short description or notes",
-      "estimatedDaysFromNow": 1, // 0 for today, 1 for tomorrow, etc.
-      "labels": "keyword1,keyword2" // Max 2 comma-separated keywords
+      "estimatedDaysFromNow": 1,
+      "labels": "keyword1,keyword2"
     }
   ]
 }
@@ -69,7 +67,15 @@ You MUST output ONLY a valid JSON object matching EXACTLY this structure:
 CRITICAL RULES: 
 - Do NOT include markdown blocks like \`\`\`json. Return just the raw JSON string.
 - If intent is SINGLE_TASK, return exactly 1 item in the tasks array.
-- Calculate "estimatedDaysFromNow" carefully based on the current date provided.`
+- Calculate "estimatedDaysFromNow" carefully based on the current date provided.`;
+
+        // Call OpenAI API
+        const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [
+                {
+                    role: "system",
+                    content: systemPrompt
                 },
                 {
                     role: "user",
@@ -103,7 +109,8 @@ CRITICAL RULES:
         let createdGoalTitle = null;
 
         // 1. If intent is NEW_GOAL, create the Goal first in Prisma
-        if (intent === "NEW_GOAL" && goal && goal.title) {
+        // OVERRIDE: If the user already provided a goalId, NEVER create a new goal, even if AI rebelled.
+        if (intent === "NEW_GOAL" && goal && goal.title && !forceMultiTask) {
             let goalDeadlineDate = null;
             if (typeof goal.deadlineDaysFromNow === 'number') {
                 const gDate = new Date();
@@ -150,7 +157,7 @@ CRITICAL RULES:
 
         return NextResponse.json({
             message: "Success",
-            intent,
+            intent: forceMultiTask && intent === "NEW_GOAL" ? "MULTI_TASK" : intent,
             createdGoal: createdGoalTitle,
             taskCount: createdTasks.count
         }, { status: 200 });

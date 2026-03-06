@@ -238,7 +238,8 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
             }
 
             setData((prevData) => {
-                const newData = { ...prevData };
+                // Use deep copy to avoid mutating React state objects safely
+                const newData = JSON.parse(JSON.stringify(prevData));
 
                 // If status changed, we need to move the task between columns
                 if (updatedData.status && updatedData.status !== prevData.tasks[taskId].status) {
@@ -246,14 +247,18 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
                     const newStatus = updatedData.status;
 
                     // Remove from old column
-                    newData.columns[oldStatus].taskIds = newData.columns[oldStatus].taskIds.filter(id => id !== taskId);
+                    if (newData.columns[oldStatus]) {
+                        newData.columns[oldStatus].taskIds = newData.columns[oldStatus].taskIds.filter((id: string) => id !== taskId);
+                    }
 
                     // Add to new column (top)
-                    newData.columns[newStatus].taskIds = [taskId, ...newData.columns[newStatus].taskIds];
+                    if (newData.columns[newStatus]) {
+                        newData.columns[newStatus].taskIds = [taskId, ...newData.columns[newStatus].taskIds];
+                    }
                 }
 
                 // Update task data
-                newData.tasks[taskId] = { ...prevData.tasks[taskId], ...formattedTask };
+                newData.tasks[taskId] = { ...newData.tasks[taskId], ...formattedTask };
 
                 return newData;
             });
@@ -273,13 +278,16 @@ export function KanbanBoard({ newTask, goalId }: KanbanBoardProps) {
             if (!res.ok) throw new Error("Failed to delete task");
 
             setData((prevData) => {
-                const newData = { ...prevData };
+                // Deep copy to prevent mutating live React state
+                const newData = JSON.parse(JSON.stringify(prevData));
                 const task = newData.tasks[taskId];
                 if (!task) return newData;
                 const status = task.status;
 
-                // Remove from columns
-                newData.columns[status].taskIds = newData.columns[status].taskIds.filter(id => id !== taskId);
+                // Remove from columns safely
+                if (newData.columns[status]) {
+                    newData.columns[status].taskIds = newData.columns[status].taskIds.filter((id: string) => id !== taskId);
+                }
 
                 // Remove from tasks dictionary
                 delete newData.tasks[taskId];

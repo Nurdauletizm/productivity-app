@@ -6,8 +6,7 @@ import { fetcher } from "@/lib/fetcher";
 import { useParams, useRouter } from "next/navigation";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import { NewTaskModal } from "@/components/NewTaskModal";
-import { AIGenerateModal } from "@/components/AIGenerateModal";
-import { ArrowLeft, Plus, Target, Sparkles } from "lucide-react";
+import { ArrowLeft, Plus, Target } from "lucide-react";
 import { mutate } from "swr";
 
 interface Goal {
@@ -34,7 +33,6 @@ export default function GoalDetailPage() {
 
     // State for task modal
     const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState(false);
-    const [isAIGenerateModalOpen, setIsAIGenerateModalOpen] = useState(false);
     const [newTaskTrigger, setNewTaskTrigger] = useState<{
         id: string;
         title: string;
@@ -110,24 +108,6 @@ export default function GoalDetailPage() {
                 onClose={() => setIsNewTaskModalOpen(false)}
                 onSubmit={handleCreateTask}
                 prefilledGoalId={goalId}
-            />
-
-            {/* AI Generate FAB */}
-            <button
-                onClick={() => setIsAIGenerateModalOpen(true)}
-                className="fixed bottom-8 right-8 w-14 h-14 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full flex flex-col items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all z-20 group"
-                title="Generate Plan with AI"
-            >
-                <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span className="text-[10px] font-bold mt-0.5 tracking-wider">AI</span>
-            </button>
-
-            <AIGenerateModal
-                isOpen={isAIGenerateModalOpen}
-                onClose={() => setIsAIGenerateModalOpen(false)}
-                onSuccess={() => mutate("/api/tasks")}
-                defaultGoalId={goalId}
-                hideGoalSelection={true}
             />
         </div>
     );
