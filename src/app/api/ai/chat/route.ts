@@ -32,7 +32,7 @@ export async function POST(req: Request) {
             return new Response("User not found", { status: 404 });
         }
 
-        const { messages, goalId, localTimeIso } = await req.json();
+        const { messages, goalId, localTimeStr } = await req.json();
 
         // Fetch user's current tasks and goals for AI context
         const [userTasks, userGoals] = await Promise.all([
@@ -89,13 +89,13 @@ export async function POST(req: Request) {
             ? `User is inside Goal context (ID: ${goalId}). Use create_single_task to add tasks to this goal.`
             : `User is not inside any specific Goal context.`;
 
-        const currentDateISO = localTimeIso || new Date().toISOString();
+        const currentTimeString = localTimeStr || new Date().toLocaleString('ru-RU');
 
         const result = await streamText({
             model: openai('gpt-4o-mini'),
             system: `Ты эксперт-ассистент по продуктивности. Ты знаешь ВСЕ задачи и цели пользователя.
-Текущее точное время на сервере (UTC): ${currentDateISO}.
-Дни недели и даты рассчитывай относительно этого времени (учитывай пояс пользователя, если он указывает точное время).
+ТЕКУЩЕЕ ТОЧНОЕ МЕСТНОЕ ВРЕМЯ ПОЛЬЗОВАТЕЛЯ: ${currentTimeString}.
+Обязательно используй это время для расчета "сегодня", "завтра" и всех дедлайнов.
 ${activeGoalText}
 
 ## ЦЕЛИ ПОЛЬЗОВАТЕЛЯ:

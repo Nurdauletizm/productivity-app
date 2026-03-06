@@ -23,7 +23,15 @@ export function AIChatWidget() {
         api: '/api/ai/chat',
         streamProtocol: 'text',
         body: {
-            localTimeIso: new Date().toISOString()
+            localTimeStr: new Date().toLocaleString('ru-RU', {
+                timeZoneName: 'short',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
         },
         maxSteps: 3,
         onFinish: () => {
