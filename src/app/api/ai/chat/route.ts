@@ -7,16 +7,16 @@ import { prisma } from "@/lib/prisma";
 
 export const maxDuration = 30;
 
-// Hardcoded JSON Schema for a single task item — avoids Zod <-> OpenAI incompatibility
+// Hardcoded JSON Schema for a single task item
 const taskItemJsonSchema = {
     type: "object" as const,
     properties: {
         title: { type: "string" as const },
         description: { type: "string" as const },
-        estimatedDaysFromNow: { type: "number" as const },
+        deadlineIso: { type: "string" as const, description: "ISO 8601 string e.g. '2026-03-08T11:00:00Z'. Include time if user provided it." },
         labels: { type: "string" as const }
     },
-    required: ["title", "description", "estimatedDaysFromNow", "labels"],
+    required: ["title", "description", "deadlineIso", "labels"],
     additionalProperties: false
 };
 
@@ -89,10 +89,13 @@ export async function POST(req: Request) {
             ? `User is inside Goal context (ID: ${goalId}). Use create_single_task to add tasks to this goal.`
             : `User is not inside any specific Goal context.`;
 
+        const currentDateISO = new Date().toISOString();
+
         const result = await streamText({
             model: openai('gpt-4o-mini'),
             system: `Ты эксперт-ассистент по продуктивности. Ты знаешь ВСЕ задачи и цели пользователя.
-Текущая дата и время: ${todayString}.
+Текущее точное время на сервере (UTC): ${currentDateISO}.
+Дни недели и даты рассчитывай относительно этого времени (учитывай пояс пользователя, если он указывает точное время).
 ${activeGoalText}
 
 ## ЦЕЛИ ПОЛЬЗОВАТЕЛЯ:
@@ -103,13 +106,16 @@ ${taskContext}
 
 ПРАВИЛА:
 - Общаешься на любом языке, которым пишет пользователь.
-- Для создания задач — используй create_single_task или create_goal_with_tasks.
-- Для изменения существующей задачи — используй update_task с правильным ID из списка выше.
+- Для создания новых задач — используй create_single_task.
+- Если создание целей и НОВЫХ задач — используй create_goal_with_tasks.
+- ВАЖНО: Если пользователь просит добавить СУЩЕСТВУЮЩИЕ задачи в новую цель: 1) вызови create_goal, 2) затем вызови update_task для каждой существующей задачи, передав goalId из шага 1. НЕ ИСПОЛЬЗУЙ create_goal_with_tasks для существующих задач!
+- Для изменения задачи (дедлайн, перенос в цель) — используй update_task с правильным ID.
 - Для УДАЛЕНИЯ задачи — используй delete_task с массивом taskIds. Можешь удалять несколько сразу.
-- Для УДАЛЕНИЯ цели — используй delete_goal. Если пользователь хочет удалить задачи вместе с целью, передай deleteTasks: true.
+- Для УДАЛЕНИЯ цели — используй delete_goal.
+- Для дат (deadlineIso) всегда передавай точный ISO 8601 формат. Если пользователь указал время (например 11:00), обязательно включи его в строку (например "2026-03-08T11:00:00.000Z").
 - Для анализа доски — смотри все задачи и давай конкретные советы по приоритизации.
 - Не просто перечисляй задачи текстом, реально вызывай функции!
-- Для полей description и labels всегда указывай значение. Используй пустую строку "" если не указано.
+- Поля description, labels, deadlineIso — обязательны. Используй пустую строку "" если значения нет.
 
 ФОРМАТИРОВАНИЕ ОТВЕТОВ (ОЧЕНЬ ВАЖНО):
 - НИКОГДА не показывай технические ID задач или целей пользователю — они только для твоего внутреннего использования.
@@ -128,7 +134,7 @@ ${taskContext}
             tools: {
                 create_single_task: tool({
                     description: "Creates one or more specific tasks in the database.",
-                    parameters: jsonSchema<{ tasks: Array<{ title: string; description: string; estimatedDaysFromNow: number; labels: string }> }>({
+                    parameters: jsonSchema<{ tasks: Array<{ title: string; description: string; deadlineIso: string; labels: string }> }>({
                         type: "object",
                         properties: {
                             tasks: {
@@ -142,12 +148,7 @@ ${taskContext}
                     // @ts-ignore
                     execute: async ({ tasks }) => {
                         const tasksToCreate = (tasks as any[]).map((t) => {
-                            let deadlineDate = null;
-                            if (typeof t.estimatedDaysFromNow === 'number' && t.estimatedDaysFromNow > 0) {
-                                const d = new Date();
-                                d.setDate(d.getDate() + t.estimatedDaysFromNow);
-                                deadlineDate = d.toISOString().split('T')[0];
-                            }
+                            let deadlineDate = t.deadlineIso ? new Date(t.deadlineIso).toISOString() : null;
                             return {
                                 title: t.title,
                                 description: t.description || null,
@@ -168,29 +169,31 @@ ${taskContext}
                 }),
 
                 update_task: tool({
-                    description: "Updates an existing task by ID. Use this to change a task's title, description, deadline, status, or labels.",
+                    description: "Updates an existing task by ID. Use this to change a task's title, description, deadline, status, labels, or link it to a goalId.",
                     parameters: jsonSchema<{
                         taskId: string;
                         title: string;
                         description: string;
-                        deadline: string;
+                        deadlineIso: string;
                         status: string;
                         labels: string;
+                        goalId: string;
                     }>({
                         type: "object",
                         properties: {
                             taskId: { type: "string" },
                             title: { type: "string" },
                             description: { type: "string" },
-                            deadline: { type: "string" },
+                            deadlineIso: { type: "string", description: "ISO 8601 string e.g. '2026-03-08T11:00:00Z'. Include time if provided." },
                             status: { type: "string" },
-                            labels: { type: "string" }
+                            labels: { type: "string" },
+                            goalId: { type: "string", description: "ID of the goal to attach this task to" }
                         },
-                        required: ["taskId", "title", "description", "deadline", "status", "labels"],
+                        required: ["taskId", "title", "description", "deadlineIso", "status", "labels", "goalId"],
                         additionalProperties: false
                     }),
                     // @ts-ignore
-                    execute: async ({ taskId, title, description, deadline, status, labels }) => {
+                    execute: async ({ taskId, title, description, deadlineIso, status, labels, goalId: newGoalId }) => {
                         // Security: verify this task belongs to the user
                         const existing = await prisma.task.findFirst({
                             where: { id: taskId, userId: user.id }
@@ -199,72 +202,95 @@ ${taskContext}
                             return { error: "Task not found or access denied." };
                         }
 
+                        let parsedDeadline = existing.deadline;
+                        if (deadlineIso && deadlineIso !== "") {
+                            parsedDeadline = new Date(deadlineIso).toISOString();
+                        }
+
                         const updated = await prisma.task.update({
                             where: { id: taskId },
                             data: {
                                 title: title || existing.title,
                                 description: description !== "" ? description : existing.description,
-                                deadline: deadline !== "" ? deadline : existing.deadline,
+                                deadline: parsedDeadline,
                                 status: status !== "" ? status : existing.status,
                                 labels: labels !== "" ? labels : existing.labels,
+                                goalId: newGoalId !== "" ? newGoalId : existing.goalId
                             }
                         });
                         return {
                             success: true,
-                            message: `Task "${updated.title}" has been updated. Tell the user the change is saved.`
+                            message: `Task "${updated.title}" has been updated.`
+                        };
+                    }
+                }),
+
+                create_goal: tool({
+                    description: "Creates a new Goal. Returns the ID of the created goal. Use this when the user asks to create a goal without tasks, or before assigning existing tasks to a new goal.",
+                    parameters: jsonSchema<{ goalTitle: string; goalDescription: string; goalDeadlineIso: string }>({
+                        type: "object",
+                        properties: {
+                            goalTitle: { type: "string" },
+                            goalDescription: { type: "string" },
+                            goalDeadlineIso: { type: "string", description: "ISO 8601 string e.g. '2026-03-08T11:00:00Z' or empty string" }
+                        },
+                        required: ["goalTitle", "goalDescription", "goalDeadlineIso"],
+                        additionalProperties: false
+                    }),
+                    // @ts-ignore
+                    execute: async ({ goalTitle, goalDescription, goalDeadlineIso }) => {
+                        const newGoal = await prisma.goal.create({
+                            data: {
+                                title: goalTitle,
+                                description: goalDescription || null,
+                                deadline: goalDeadlineIso ? new Date(goalDeadlineIso).toISOString() : null,
+                                userId: user.id
+                            }
+                        });
+                        return {
+                            success: true,
+                            goalId: newGoal.id,
+                            message: `Successfully created Goal "${goalTitle}". The ID is ${newGoal.id}.`
                         };
                     }
                 }),
 
                 create_goal_with_tasks: tool({
-                    description: "Creates a macro-level Goal and automatically nests a list of child tasks inside it.",
-                    parameters: jsonSchema<{ goalTitle: string; goalDescription: string; goalDeadlineDaysFromNow: number; tasks: Array<{ title: string; description: string; estimatedDaysFromNow: number; labels: string }> }>({
+                    description: "Creates a macro-level Goal and automatically nests a list of NEW child tasks inside it.",
+                    parameters: jsonSchema<{ goalTitle: string; goalDescription: string; goalDeadlineIso: string; tasks: Array<{ title: string; description: string; deadlineIso: string; labels: string }> }>({
                         type: "object",
                         properties: {
                             goalTitle: { type: "string" },
                             goalDescription: { type: "string" },
-                            goalDeadlineDaysFromNow: { type: "number" },
+                            goalDeadlineIso: { type: "string" },
                             tasks: {
                                 type: "array",
                                 items: taskItemJsonSchema
                             }
                         },
-                        required: ["goalTitle", "goalDescription", "goalDeadlineDaysFromNow", "tasks"],
+                        required: ["goalTitle", "goalDescription", "goalDeadlineIso", "tasks"],
                         additionalProperties: false
                     }),
                     // @ts-ignore
-                    execute: async ({ goalTitle, goalDescription, goalDeadlineDaysFromNow, tasks }) => {
+                    execute: async ({ goalTitle, goalDescription, goalDeadlineIso, tasks }) => {
                         if (goalId) {
                             return { error: "Already inside a Goal context, cannot nest goals." };
-                        }
-
-                        let goalDeadline = null;
-                        if (typeof goalDeadlineDaysFromNow === 'number' && goalDeadlineDaysFromNow > 0) {
-                            const d = new Date();
-                            d.setDate(d.getDate() + goalDeadlineDaysFromNow);
-                            goalDeadline = d.toISOString().split('T')[0];
                         }
 
                         const newGoal = await prisma.goal.create({
                             data: {
                                 title: goalTitle,
                                 description: goalDescription || null,
-                                deadline: goalDeadline,
+                                deadline: goalDeadlineIso ? new Date(goalDeadlineIso).toISOString() : null,
                                 userId: user.id
                             }
                         });
 
                         const tasksToCreate = (tasks as any[]).map((t) => {
-                            let deadlineDate = null;
-                            if (typeof t.estimatedDaysFromNow === 'number') {
-                                const d = new Date();
-                                d.setDate(d.getDate() + t.estimatedDaysFromNow);
-                                deadlineDate = d.toISOString().split('T')[0];
-                            }
                             return {
                                 title: t.title,
                                 description: t.description || null,
-                                deadline: deadlineDate,
+                                deadline: t.deadlineIso ? new Date(t.deadlineIso).toISOString() : null,
                                 status: "BACKLOG",
                                 labels: t.labels || "ai-generated",
                                 userId: user.id,
