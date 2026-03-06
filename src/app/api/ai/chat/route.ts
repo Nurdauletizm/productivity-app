@@ -32,7 +32,7 @@ export async function POST(req: Request) {
             return new Response("User not found", { status: 404 });
         }
 
-        const { messages, goalId } = await req.json();
+        const { messages, goalId, localTimeIso } = await req.json();
 
         // Fetch user's current tasks and goals for AI context
         const [userTasks, userGoals] = await Promise.all([
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
             ? `User is inside Goal context (ID: ${goalId}). Use create_single_task to add tasks to this goal.`
             : `User is not inside any specific Goal context.`;
 
-        const currentDateISO = new Date().toISOString();
+        const currentDateISO = localTimeIso || new Date().toISOString();
 
         const result = await streamText({
             model: openai('gpt-4o-mini'),
@@ -119,8 +119,8 @@ ${taskContext}
 
 ФОРМАТИРОВАНИЕ ОТВЕТОВ (ОЧЕНЬ ВАЖНО):
 - НИКОГДА не показывай технические ID задач или целей пользователю — они только для твоего внутреннего использования.
-- НИКОГДА не используй маркдаун для выделения текста: никаких звездочек (**bold**), решеток (### Заголовок) и прочих спецсимволов. Твой текст должен быть абсолютно чистым и выглядеть как обычное человеческое сообщение.
-- Используй только эмодзи, перенос строки (Enter) и обычные списки с тире или цифрами.
+- Обязательно используй Markdown (жирный текст, списки) для структурирования ответа, чтобы его было удобно читать.
+- Используй эмодзи.
 - Когда перечисляешь задачи, пример красивого ответа:
   📋 Твои задачи:
   1. 📌 Build a Simple Next.js App — дедлайн 13 марта

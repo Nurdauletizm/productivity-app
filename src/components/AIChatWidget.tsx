@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { useChat } from "@ai-sdk/react";
 import { mutate } from "swr";
+import ReactMarkdown from "react-markdown";
 
 export function AIChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +22,9 @@ export function AIChatWidget() {
     const { messages, input, handleInputChange, handleSubmit, isLoading, error, append } = useChat({
         api: '/api/ai/chat',
         streamProtocol: 'text',
-        body: {},
+        body: {
+            localTimeIso: new Date().toISOString()
+        },
         maxSteps: 3,
         onFinish: () => {
             mutate("/api/tasks");
@@ -197,7 +200,20 @@ export function AIChatWidget() {
                                                             ? 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-tr-sm'
                                                             : 'bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-200 border border-gray-100 dark:border-zinc-700/50 rounded-tl-sm shadow-sm'
                                                             }`}>
-                                                            {m.content}
+                                                            {m.role === 'user' ? (
+                                                                <>{m.content}</>
+                                                            ) : (
+                                                                <ReactMarkdown
+                                                                    components={{
+                                                                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
+                                                                        strong: ({ node, ...props }) => <strong className="font-semibold text-indigo-900 dark:text-indigo-300" {...props} />,
+                                                                        ul: ({ node, ...props }) => <ul className="pl-4 space-y-1 mb-2 last:mb-0 list-none ml-0" {...props} />,
+                                                                        li: ({ node, ...props }) => <li className="relative pl-0 before:content-[''] before:absolute before:left-[-12px] before:top-[8px] before:w-[4px] before:h-[4px] before:bg-indigo-300 before:rounded-full" {...props} />,
+                                                                    }}
+                                                                >
+                                                                    {m.content}
+                                                                </ReactMarkdown>
+                                                            )}
                                                         </div>
                                                     )}
 
