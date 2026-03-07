@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Target, Calendar, Settings, LogOut, KanbanSquare, Sun, Moon } from "lucide-react";
+import { LayoutDashboard, Target, Calendar, Settings, LogOut, KanbanSquare, Sun, Moon, Flame } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
@@ -25,6 +25,7 @@ export function Sidebar() {
         { name: "Goals", href: "/goals", icon: Target },
         { name: "Board", href: "/board", icon: KanbanSquare },
         { name: "Calendar", href: "/calendar", icon: Calendar },
+        { name: "Habits", href: "/habits", icon: Flame },
     ];
 
     return (

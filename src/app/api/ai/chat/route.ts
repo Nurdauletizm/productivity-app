@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         const { messages, goalId, localTimeStr } = await req.json();
 
         // Fetch user's current tasks and goals for AI context
-        const [userTasks, userGoals] = await Promise.all([
+        const [userTasks, userGoals, userHabits] = await Promise.all([
             prisma.task.findMany({
                 where: { userId: user.id },
                 orderBy: { createdAt: 'desc' },
@@ -54,6 +54,11 @@ export async function POST(req: Request) {
                     deadline: true,
                     _count: { select: { tasks: true } }
                 }
+            }),
+            prisma.habit.findMany({
+                where: { userId: user.id },
+                include: { logs: { orderBy: { date: 'desc' }, take: 30 } },
+                orderBy: { createdAt: 'asc' }
             })
         ]);
 
@@ -89,6 +94,22 @@ export async function POST(req: Request) {
             ? `User is inside Goal context (ID: ${goalId}). Use create_single_task to add tasks to this goal.`
             : `User is not inside any specific Goal context.`;
 
+        const todayDateStr = new Date().toISOString().split('T')[0];
+        const habitContext = userHabits.length === 0
+            ? 'У пользователя пока нет привычек.'
+            : userHabits.map((h: any) => {
+                const logDates = new Set(h.logs.map((l: any) => l.date));
+                const doneToday = logDates.has(todayDateStr);
+                let streak = 0;
+                const d = new Date();
+                while (true) {
+                    const str = d.toISOString().split('T')[0];
+                    if (logDates.has(str)) { streak++; d.setDate(d.getDate() - 1); }
+                    else break;
+                }
+                return `- ${h.emoji} ${h.name} | стрик: ${streak} дней | сегодня: ${doneToday ? 'выполнено ✅' : 'не выполнено ❌'}`;
+            }).join('\n');
+
         const currentTimeString = localTimeStr || new Date().toLocaleString('ru-RU');
 
         const result = await streamText({
@@ -103,6 +124,9 @@ ${goalContext}
 
 ## ЗАДАЧИ ПОЛЬЗОВАТЕЛЯ (используй ID когда нужно изменить задачу):
 ${taskContext}
+
+## ПРИВЫЧКИ ПОЛЬЗОВАТЕЛЯ (streak tracker):
+${habitContext}
 
 ПРАВИЛА:
 - Общаешься на любом языке, которым пишет пользователь.
