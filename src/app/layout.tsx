@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Notion Like Productivity",
-  description: "A productivity platform for goals and tasks.",
+  title: "Lumina",
+  description: "Your intelligent productivity and goal-tracking platform.",
 };
 
 export default function RootLayout({

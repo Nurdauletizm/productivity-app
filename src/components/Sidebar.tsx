@@ -29,10 +29,10 @@ export function Sidebar() {
     return (
         <div className="flex flex-col h-screen w-64 bg-white dark:bg-[#121212] border-r border-gray-200 dark:border-zinc-800 px-4 py-6 flex-shrink-0 transition-colors">
             <div className="flex items-center gap-2 px-2 mb-10">
-                <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center">
-                    <span className="text-white dark:text-black font-bold text-lg">N</span>
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                    <span className="text-white font-bold text-lg">L</span>
                 </div>
-                <span className="font-semibold text-xl tracking-tight text-gray-900 dark:text-zinc-100">Notion Like</span>
+                <span className="font-semibold text-xl tracking-tight text-gray-900 dark:text-zinc-100">Lumina</span>
             </div>
 
             <nav className="flex-1 space-y-1">
