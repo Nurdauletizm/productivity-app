@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Target, Calendar, Settings, LogOut, KanbanSquare, Sun, Moon } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
@@ -29,9 +30,13 @@ export function Sidebar() {
     return (
         <div className="flex flex-col h-screen w-64 bg-white dark:bg-[#121212] border-r border-gray-200 dark:border-zinc-800 px-4 py-6 flex-shrink-0 transition-colors">
             <div className="flex items-center gap-2 px-2 mb-10">
-                <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-lg flex items-center justify-center shadow-md shrink-0">
-                    <span className="text-white font-black text-sm tracking-tight">NX</span>
-                </div>
+                <Image
+                    src="/nizmix-logo.png"
+                    alt="Nizmix Logo"
+                    width={36}
+                    height={36}
+                    className="rounded-lg shrink-0"
+                />
                 <span className="font-semibold text-xl tracking-tight text-gray-900 dark:text-zinc-100">Nizmix</span>
             </div>
 

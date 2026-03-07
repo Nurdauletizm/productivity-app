@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Target } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -42,9 +42,13 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen bg-[#fbfbfa] flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center">
-                <div className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center mb-6">
-                    <Target className="w-6 h-6" />
-                </div>
+                <Image
+                    src="/nizmix-logo.png"
+                    alt="Nizmix Logo"
+                    width={56}
+                    height={56}
+                    className="mb-6 rounded-2xl"
+                />
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
                 <p className="text-gray-500 text-sm mb-8 text-center">Sign in to manage your world with Nizmix.</p>
 
