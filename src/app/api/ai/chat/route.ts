@@ -4,8 +4,11 @@ import { jsonSchema } from "@ai-sdk/ui-utils";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import OpenAI from "openai";
 
 export const maxDuration = 30;
+
+const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Hardcoded JSON Schema for a single task item
 const taskItemJsonSchema = {
@@ -98,8 +101,8 @@ export async function POST(req: Request) {
             }).join('\n');
 
         const activeGoalText = goalId
-            ? `User is inside Goal context (ID: ${goalId}). Use create_single_task to add tasks to this goal.`
-            : `User is not inside any specific Goal context.`;
+            ? `Пользователь находится внутри контекста Цели (ID: ${goalId}). Используй create_single_task чтобы добавить задачи в эту цель.`
+            : `Пользователь не находится внутри конкретной Цели.`;
 
         const todayDateStr = new Date().toISOString().split('T')[0];
         const habitContext = userHabits.length === 0
@@ -114,14 +117,14 @@ export async function POST(req: Request) {
                     if (logDates.has(str)) { streak++; d.setDate(d.getDate() - 1); }
                     else break;
                 }
-                return `- ${h.emoji} ${h.name} | стрик: ${streak} дней | сегодня: ${doneToday ? 'выполнено ✅' : 'не выполнено ❌'}`;
+                return `- [ID:${h.id}] ${h.emoji} ${h.name} | стрик: ${streak} дней | сегодня: ${doneToday ? 'выполнено ✅' : 'не выполнено ❌'}`;
             }).join('\n');
 
         const currentTimeString = localTimeStr || new Date().toLocaleString('ru-RU');
 
         const result = await streamText({
             model: openai('gpt-4o-mini'),
-            system: `Ты эксперт-ассистент по продуктивности. Ты знаешь ВСЕ задачи и цели пользователя.
+            system: `Ты эксперт-ассистент по продуктивности в приложении Nizmix. Ты знаешь ВСЕ задачи, цели и привычки пользователя.
 ТЕКУЩЕЕ ТОЧНОЕ МЕСТНОЕ ВРЕМЯ ПОЛЬЗОВАТЕЛЯ: ${currentTimeString}.
 Обязательно используй это время для расчета "сегодня", "завтра" и всех дедлайнов.
 ${activeGoalText}
@@ -141,8 +144,11 @@ ${habitContext}
 - Если создание целей и НОВЫХ задач — используй create_goal_with_tasks.
 - ВАЖНО: Если пользователь просит добавить СУЩЕСТВУЮЩИЕ задачи в новую цель: 1) вызови create_goal, 2) затем вызови update_task для каждой существующей задачи, передав goalId из шага 1. НЕ ИСПОЛЬЗУЙ create_goal_with_tasks для существующих задач!
 - Для изменения задачи (дедлайн, перенос в цель) — используй update_task с правильным ID.
+- Для изменения цели (название, дедлайн, описание) — используй update_goal с правильным ID.
 - Для УДАЛЕНИЯ задачи — используй delete_task с массивом taskIds. Можешь удалять несколько сразу.
 - Для УДАЛЕНИЯ цели — используй delete_goal.
+- Для привычек — используй create_habit (создать), toggle_habit_today (отметить/снять отметку), delete_habit (удалить).
+- Для генерации подзадач (чеклиста) — используй generate_subtasks с ID задачи.
 - Для дат (deadlineIso) всегда передавай точный ISO 8601 формат. Если пользователь указал время (например 11:00), обязательно включи его в строку (например "2026-03-08T11:00:00.000Z").
 - Для анализа доски — смотри все задачи и давай конкретные советы по приоритизации.
 - Не просто перечисляй задачи текстом, реально вызывай функции!
@@ -164,7 +170,7 @@ ${habitContext}
             messages,
             tools: {
                 create_single_task: tool({
-                    description: "Creates one or more specific tasks in the database.",
+                    description: "Создаёт одну или несколько задач в базе данных.",
                     parameters: jsonSchema<{ tasks: Array<{ title: string; description: string; deadlineIso: string; labels: string }> }>({
                         type: "object",
                         properties: {
@@ -194,13 +200,13 @@ ${habitContext}
                         const created = await prisma.task.createMany({ data: tasksToCreate });
                         return {
                             success: true,
-                            message: `Successfully created ${created.count} tasks. Tell the user it's done.`
+                            message: `Создано ${created.count} задач(и). Сообщи пользователю что готово.`
                         };
                     }
                 }),
 
                 update_task: tool({
-                    description: "Updates an existing task by ID. Use this to change a task's title, description, deadline, status, labels, or link it to a goalId.",
+                    description: "Обновляет существующую задачу по ID. Изменяет название, описание, дедлайн, статус, метки или привязку к цели.",
                     parameters: jsonSchema<{
                         taskId: string;
                         title: string;
@@ -215,22 +221,21 @@ ${habitContext}
                             taskId: { type: "string" },
                             title: { type: "string" },
                             description: { type: "string" },
-                            deadlineIso: { type: "string", description: "ISO 8601 string e.g. '2026-03-08T11:00:00Z'. Include time if provided." },
+                            deadlineIso: { type: "string", description: "ISO 8601 формат, например '2026-03-08T11:00:00Z'. Включай время если указано." },
                             status: { type: "string" },
                             labels: { type: "string" },
-                            goalId: { type: "string", description: "ID of the goal to attach this task to" }
+                            goalId: { type: "string", description: "ID цели для привязки задачи" }
                         },
                         required: ["taskId", "title", "description", "deadlineIso", "status", "labels", "goalId"],
                         additionalProperties: false
                     }),
                     // @ts-ignore
                     execute: async ({ taskId, title, description, deadlineIso, status, labels, goalId: newGoalId }) => {
-                        // Security: verify this task belongs to the user
                         const existing = await prisma.task.findFirst({
                             where: { id: taskId, userId: user.id }
                         });
                         if (!existing) {
-                            return { error: "Task not found or access denied." };
+                            return { error: "Задача не найдена или нет доступа." };
                         }
 
                         let parsedDeadline = existing.deadline;
@@ -251,19 +256,19 @@ ${habitContext}
                         });
                         return {
                             success: true,
-                            message: `Task "${updated.title}" has been updated.`
+                            message: `Задача "${updated.title}" обновлена.`
                         };
                     }
                 }),
 
                 create_goal: tool({
-                    description: "Creates a new Goal. Returns the ID of the created goal. Use this when the user asks to create a goal without tasks, or before assigning existing tasks to a new goal.",
+                    description: "Создаёт новую Цель. Возвращает ID созданной цели. Используй когда нужно создать пустую цель или перед привязкой существующих задач.",
                     parameters: jsonSchema<{ goalTitle: string; goalDescription: string; goalDeadlineIso: string }>({
                         type: "object",
                         properties: {
                             goalTitle: { type: "string" },
                             goalDescription: { type: "string" },
-                            goalDeadlineIso: { type: "string", description: "ISO 8601 string e.g. '2026-03-08T11:00:00Z' or empty string" }
+                            goalDeadlineIso: { type: "string", description: "ISO 8601 формат или пустая строка" }
                         },
                         required: ["goalTitle", "goalDescription", "goalDeadlineIso"],
                         additionalProperties: false
@@ -281,13 +286,55 @@ ${habitContext}
                         return {
                             success: true,
                             goalId: newGoal.id,
-                            message: `Successfully created Goal "${goalTitle}". The ID is ${newGoal.id}.`
+                            message: `Цель "${goalTitle}" создана. ID: ${newGoal.id}.`
+                        };
+                    }
+                }),
+
+                update_goal: tool({
+                    description: "Обновляет существующую цель по ID. Изменяет название, описание или дедлайн цели.",
+                    parameters: jsonSchema<{ goalId: string; title: string; description: string; deadlineIso: string }>({
+                        type: "object",
+                        properties: {
+                            goalId: { type: "string" },
+                            title: { type: "string", description: "Новое название цели или пустая строка чтобы не менять" },
+                            description: { type: "string", description: "Новое описание или пустая строка чтобы не менять" },
+                            deadlineIso: { type: "string", description: "Новый дедлайн в ISO 8601 формате или пустая строка чтобы не менять" }
+                        },
+                        required: ["goalId", "title", "description", "deadlineIso"],
+                        additionalProperties: false
+                    }),
+                    // @ts-ignore
+                    execute: async ({ goalId: targetGoalId, title, description, deadlineIso }) => {
+                        const existing = await prisma.goal.findFirst({
+                            where: { id: targetGoalId, userId: user.id }
+                        });
+                        if (!existing) {
+                            return { error: "Цель не найдена или нет доступа." };
+                        }
+
+                        let parsedDeadline = existing.deadline;
+                        if (deadlineIso && deadlineIso !== "") {
+                            parsedDeadline = new Date(deadlineIso).toISOString();
+                        }
+
+                        const updated = await prisma.goal.update({
+                            where: { id: targetGoalId },
+                            data: {
+                                title: title || existing.title,
+                                description: description !== "" ? description : existing.description,
+                                deadline: parsedDeadline
+                            }
+                        });
+                        return {
+                            success: true,
+                            message: `Цель "${updated.title}" обновлена.`
                         };
                     }
                 }),
 
                 create_goal_with_tasks: tool({
-                    description: "Creates a macro-level Goal and automatically nests a list of NEW child tasks inside it.",
+                    description: "Создаёт цель и автоматически вкладывает в неё новые задачи.",
                     parameters: jsonSchema<{ goalTitle: string; goalDescription: string; goalDeadlineIso: string; tasks: Array<{ title: string; description: string; deadlineIso: string; labels: string }> }>({
                         type: "object",
                         properties: {
@@ -305,7 +352,7 @@ ${habitContext}
                     // @ts-ignore
                     execute: async ({ goalTitle, goalDescription, goalDeadlineIso, tasks }) => {
                         if (goalId) {
-                            return { error: "Already inside a Goal context, cannot nest goals." };
+                            return { error: "Уже внутри контекста Цели, нельзя создавать вложенные цели." };
                         }
 
                         const newGoal = await prisma.goal.create({
@@ -332,13 +379,13 @@ ${habitContext}
                         const created = await prisma.task.createMany({ data: tasksToCreate });
                         return {
                             success: true,
-                            message: `Successfully created Goal "${goalTitle}" with ${created.count} nested tasks. Tell the user it's done.`
+                            message: `Цель "${goalTitle}" создана с ${created.count} задачами.`
                         };
                     }
                 }),
 
                 delete_task: tool({
-                    description: "Deletes one or more tasks by their IDs. Use this when the user asks to delete or remove specific tasks.",
+                    description: "Удаляет одну или несколько задач по их ID.",
                     parameters: jsonSchema<{ taskIds: string[] }>({
                         type: "object",
                         properties: {
@@ -349,19 +396,18 @@ ${habitContext}
                     }),
                     // @ts-ignore
                     execute: async ({ taskIds }) => {
-                        // Security: only delete tasks belonging to this user
                         const deleted = await prisma.task.deleteMany({
                             where: { id: { in: taskIds }, userId: user.id }
                         });
                         return {
                             success: true,
-                            message: `Deleted ${deleted.count} task(s). Tell the user it's done.`
+                            message: `Удалено ${deleted.count} задач(и).`
                         };
                     }
                 }),
 
                 delete_goal: tool({
-                    description: "Deletes a goal by its ID. If deleteTasks is true, also deletes all tasks belonging to that goal. Use this when user asks to delete a goal.",
+                    description: "Удаляет цель по ID. Если deleteTasks=true, также удаляет все задачи этой цели.",
                     parameters: jsonSchema<{ goalId: string; deleteTasks: boolean }>({
                         type: "object",
                         properties: {
@@ -373,12 +419,11 @@ ${habitContext}
                     }),
                     // @ts-ignore
                     execute: async ({ goalId: targetGoalId, deleteTasks: shouldDeleteTasks }) => {
-                        // Security: verify goal belongs to user
                         const existing = await prisma.goal.findFirst({
                             where: { id: targetGoalId, userId: user.id }
                         });
                         if (!existing) {
-                            return { error: "Goal not found or access denied." };
+                            return { error: "Цель не найдена или нет доступа." };
                         }
                         if (shouldDeleteTasks) {
                             await prisma.task.deleteMany({ where: { goalId: targetGoalId, userId: user.id } });
@@ -386,12 +431,175 @@ ${habitContext}
                         await prisma.goal.delete({ where: { id: targetGoalId } });
                         return {
                             success: true,
-                            message: `Goal "${existing.title}" deleted${shouldDeleteTasks ? " along with all its tasks" : ""}. Tell the user it's done.`
+                            message: `Цель "${existing.title}" удалена${shouldDeleteTasks ? " вместе со всеми задачами" : ""}.`
                         };
                     }
-                })
+                }),
+
+                // ========== HABIT TOOLS ==========
+
+                create_habit: tool({
+                    description: "Создаёт новую привычку для трекера. Нужно указать имя, эмодзи и цвет.",
+                    parameters: jsonSchema<{ name: string; emoji: string; color: string }>({
+                        type: "object",
+                        properties: {
+                            name: { type: "string", description: "Название привычки, например 'Зарядка'" },
+                            emoji: { type: "string", description: "Эмодзи для привычки, например '💪'" },
+                            color: { type: "string", description: "HEX цвет, например '#6366f1'" }
+                        },
+                        required: ["name", "emoji", "color"],
+                        additionalProperties: false
+                    }),
+                    // @ts-ignore
+                    execute: async ({ name, emoji, color }) => {
+                        try {
+                            const habit = await (prisma as any).habit.create({
+                                data: {
+                                    name: name.trim(),
+                                    emoji: emoji || "⭐",
+                                    color: color || "#6366f1",
+                                    userId: user.id,
+                                }
+                            });
+                            return {
+                                success: true,
+                                habitId: habit.id,
+                                message: `Привычка "${emoji} ${name}" создана!`
+                            };
+                        } catch (err) {
+                            return { error: "Не удалось создать привычку. Таблица привычек может быть недоступна." };
+                        }
+                    }
+                }),
+
+                toggle_habit_today: tool({
+                    description: "Отмечает привычку как выполненную за сегодня, или снимает отметку если уже отмечена.",
+                    parameters: jsonSchema<{ habitId: string; markDone: boolean }>({
+                        type: "object",
+                        properties: {
+                            habitId: { type: "string", description: "ID привычки" },
+                            markDone: { type: "boolean", description: "true = отметить выполненной, false = снять отметку" }
+                        },
+                        required: ["habitId", "markDone"],
+                        additionalProperties: false
+                    }),
+                    // @ts-ignore
+                    execute: async ({ habitId, markDone }) => {
+                        try {
+                            const habit = await (prisma as any).habit.findUnique({ where: { id: habitId } });
+                            if (!habit || habit.userId !== user.id) {
+                                return { error: "Привычка не найдена." };
+                            }
+
+                            const dateStr = new Date().toISOString().split('T')[0];
+
+                            if (markDone) {
+                                await (prisma as any).habitLog.upsert({
+                                    where: { habitId_date: { habitId, date: dateStr } },
+                                    create: { habitId, date: dateStr },
+                                    update: {},
+                                });
+                                return { success: true, message: `Привычка "${habit.emoji} ${habit.name}" отмечена ✅` };
+                            } else {
+                                await (prisma as any).habitLog.deleteMany({
+                                    where: { habitId, date: dateStr },
+                                });
+                                return { success: true, message: `Отметка с привычки "${habit.emoji} ${habit.name}" снята.` };
+                            }
+                        } catch (err) {
+                            return { error: "Ошибка при обновлении привычки." };
+                        }
+                    }
+                }),
+
+                delete_habit: tool({
+                    description: "Удаляет привычку по ID.",
+                    parameters: jsonSchema<{ habitId: string }>({
+                        type: "object",
+                        properties: {
+                            habitId: { type: "string", description: "ID привычки для удаления" }
+                        },
+                        required: ["habitId"],
+                        additionalProperties: false
+                    }),
+                    // @ts-ignore
+                    execute: async ({ habitId }) => {
+                        try {
+                            const habit = await (prisma as any).habit.findUnique({ where: { id: habitId } });
+                            if (!habit || habit.userId !== user.id) {
+                                return { error: "Привычка не найдена." };
+                            }
+                            await (prisma as any).habitLog.deleteMany({ where: { habitId } });
+                            await (prisma as any).habit.delete({ where: { id: habitId } });
+                            return { success: true, message: `Привычка "${habit.emoji} ${habit.name}" удалена.` };
+                        } catch (err) {
+                            return { error: "Ошибка при удалении привычки." };
+                        }
+                    }
+                }),
+
+                // ========== SUBTASK GENERATION ==========
+
+                generate_subtasks: tool({
+                    description: "Генерирует AI-подзадачи (чеклист) для существующей задачи. Используй когда пользователь просит разбить задачу на шаги.",
+                    parameters: jsonSchema<{ taskId: string }>({
+                        type: "object",
+                        properties: {
+                            taskId: { type: "string", description: "ID задачи для которой нужно сгенерировать подзадачи" }
+                        },
+                        required: ["taskId"],
+                        additionalProperties: false
+                    }),
+                    // @ts-ignore
+                    execute: async ({ taskId }) => {
+                        const task = await prisma.task.findFirst({
+                            where: { id: taskId, userId: user.id }
+                        });
+                        if (!task) {
+                            return { error: "Задача не найдена." };
+                        }
+
+                        const completion = await openaiClient.chat.completions.create({
+                            model: "gpt-4o-mini",
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: `You are a productivity assistant. Generate 4–6 specific, actionable subtask checklist items for the given task. 
+Return ONLY a JSON array of objects like: [{"text": "...", "done": false}, ...]
+Be concise and specific. No explanations, just JSON.`
+                                },
+                                {
+                                    role: "user",
+                                    content: `Task: "${task.title}"${task.description ? `\nDescription: ${task.description}` : ""}`
+                                }
+                            ],
+                            temperature: 0.7,
+                            max_tokens: 400
+                        });
+
+                        const raw = completion.choices[0].message.content?.trim() ?? "[]";
+                        let checklist: Array<{ text: string; done: boolean }>;
+                        try {
+                            const cleaned = raw.replace(/```json|```/g, "").trim();
+                            checklist = JSON.parse(cleaned);
+                        } catch {
+                            checklist = [{ text: "Изучить детали задачи", done: false }];
+                        }
+
+                        await (prisma.task as any).update({
+                            where: { id: taskId },
+                            data: { checklist: JSON.stringify(checklist) }
+                        });
+
+                        const subtaskList = checklist.map((s, i) => `${i + 1}. ${s.text}`).join('\n');
+                        return {
+                            success: true,
+                            message: `Подзадачи для "${task.title}" сгенерированы:\n${subtaskList}`
+                        };
+                    }
+                }),
             },
-            maxSteps: 3,
+            maxSteps: 5,
         });
 
         return result.toTextStreamResponse();

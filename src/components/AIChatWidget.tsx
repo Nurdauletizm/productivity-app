@@ -34,10 +34,11 @@ export function AIChatWidget() {
                 minute: '2-digit'
             })
         },
-        maxSteps: 3,
+        maxSteps: 5,
         onFinish: () => {
             mutate("/api/tasks");
             mutate("/api/goals");
+            mutate("/api/habits");
         }
     });
 
@@ -182,9 +183,10 @@ export function AIChatWidget() {
                                             <div className="flex flex-wrap gap-1.5 justify-center mt-2">
                                                 {[
                                                     "Что у меня на сегодня?",
-                                                    "Проанализируй мою доску",
+                                                    "Как мои привычки?",
                                                     "Спланируй мою неделю",
                                                     "Добавь задачу",
+                                                    "Создай новую цель",
                                                 ].map((prompt) => (
                                                     <button
                                                         key={prompt}
@@ -236,12 +238,27 @@ export function AIChatWidget() {
                                                         inv.state === 'result' ? (
                                                             <div key={inv.toolCallId} className="px-3 py-1.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 rounded-lg text-xs flex items-center gap-1.5 text-green-700 dark:text-green-400">
                                                                 <CheckCircle2 className="w-3.5 h-3.5" />
-                                                                {inv.toolName === 'update_task' ? 'Задача обновлена ✓' : 'Сохранено в базе данных ✓'}
+                                                                {inv.toolName === 'update_task' ? 'Задача обновлена ✓'
+                                                                    : inv.toolName === 'update_goal' ? 'Цель обновлена ✓'
+                                                                        : inv.toolName === 'create_habit' ? 'Привычка создана ✓'
+                                                                            : inv.toolName === 'toggle_habit_today' ? 'Привычка отмечена ✓'
+                                                                                : inv.toolName === 'delete_habit' ? 'Привычка удалена ✓'
+                                                                                    : inv.toolName === 'delete_task' ? 'Задача удалена ✓'
+                                                                                        : inv.toolName === 'delete_goal' ? 'Цель удалена ✓'
+                                                                                            : inv.toolName === 'generate_subtasks' ? 'Подзадачи сгенерированы ✓'
+                                                                                                : 'Сохранено ✓'}
                                                             </div>
                                                         ) : (
                                                             <div key={inv.toolCallId} className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-900/30 rounded-lg text-xs flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400">
                                                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                                                {inv.toolName === 'create_goal_with_tasks' ? 'Создаю цель...' : inv.toolName === 'update_task' ? 'Обновляю задачу...' : 'Создаю задачи...'}
+                                                                {inv.toolName === 'create_goal_with_tasks' ? 'Создаю цель...'
+                                                                    : inv.toolName === 'update_task' ? 'Обновляю задачу...'
+                                                                        : inv.toolName === 'update_goal' ? 'Обновляю цель...'
+                                                                            : inv.toolName === 'create_habit' ? 'Создаю привычку...'
+                                                                                : inv.toolName === 'toggle_habit_today' ? 'Обновляю привычку...'
+                                                                                    : inv.toolName === 'delete_habit' ? 'Удаляю привычку...'
+                                                                                        : inv.toolName === 'generate_subtasks' ? 'Генерирую подзадачи...'
+                                                                                            : 'Создаю задачи...'}
                                                             </div>
                                                         )
                                                     ))}
