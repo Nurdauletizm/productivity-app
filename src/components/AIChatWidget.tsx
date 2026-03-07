@@ -113,7 +113,7 @@ export function AIChatWidget() {
             {!isOpen && (
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-full flex flex-col items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all z-[9999] group"
+                    className="fixed bottom-20 md:bottom-8 right-4 md:right-8 w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white rounded-full flex flex-col items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all z-[9999] group"
                     title="AI Assistant"
                 >
                     <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
@@ -126,10 +126,10 @@ export function AIChatWidget() {
                 <div
                     ref={widgetRef}
                     style={widgetStyle}
-                    className={`bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl border border-gray-200 dark:border-zinc-700 overflow-hidden transition-all duration-200 ${isDragging ? 'shadow-2xl ring-2 ring-indigo-400/50 select-none' : ''}`}
+                    className={`bg-white dark:bg-[#1a1a1a] md:rounded-2xl shadow-2xl border border-gray-200 dark:border-zinc-700 overflow-hidden transition-all duration-200 ${isDragging ? 'shadow-2xl ring-2 ring-indigo-400/50 select-none' : ''} fixed inset-0 md:inset-auto md:relative`}
                 >
                     {/* Chat panel width and height */}
-                    <div className="flex flex-col" style={{ width: 380, height: isMinimized ? 'auto' : 520 }}>
+                    <div className="flex flex-col w-full h-full md:w-[380px] md:h-[520px]" style={isMinimized ? { height: 'auto' } : undefined}>
 
                         {/* Header — Drag Handle */}
                         <div

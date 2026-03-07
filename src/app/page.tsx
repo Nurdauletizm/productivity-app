@@ -19,14 +19,14 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-full bg-[#fbfbfa] dark:bg-[#0a0a0a] transition-colors">
-      <header className="px-8 py-6 border-b border-gray-100 dark:border-zinc-800 sticky top-0 bg-white/80 dark:bg-[#121212]/80 backdrop-blur-sm z-10 shrink-0 transition-colors">
+      <header className="px-4 md:px-8 py-4 md:py-6 border-b border-gray-100 dark:border-zinc-800 sticky top-0 bg-white/80 dark:bg-[#121212]/80 backdrop-blur-sm z-10 shrink-0 transition-colors">
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100 tracking-tight">Обзор</h1>
         <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Сводка вашей продуктивности и целей.</p>
       </header>
 
-      <main className="flex-1 p-8 overflow-y-auto space-y-8">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto space-y-6 md:space-y-8">
         {/* Summary Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-6 shadow-sm flex flex-col justify-between transition-colors">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-gray-50 dark:bg-zinc-800 rounded-lg"><Target className="w-5 h-5 text-gray-600 dark:text-zinc-400" /></div>

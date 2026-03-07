@@ -70,7 +70,7 @@ export default function RootLayout({
         >
           <Providers>
             <SidebarWrapper />
-            <main className="flex-1 overflow-y-auto">
+            <main className="flex-1 overflow-y-auto pt-14 md:pt-0 pb-16 md:pb-0">
               {children}
             </main>
             <AIChatWidget />
