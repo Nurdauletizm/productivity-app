@@ -7,16 +7,24 @@ export async function DELETE(
     req: Request,
     { params }: { params: { id: string } }
 ) {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user?.email) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
-    const habit = await prisma.habit.findUnique({ where: { id: params.id } });
-    if (!habit || habit.userId !== session.user.id) {
-        return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
+        const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+        if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    await prisma.habit.delete({ where: { id: params.id } });
-    return NextResponse.json({ success: true });
+        const habit = await (prisma as any).habit.findUnique({ where: { id: params.id } });
+        if (!habit || habit.userId !== user.id) {
+            return NextResponse.json({ error: "Not found" }, { status: 404 });
+        }
+
+        await (prisma as any).habit.delete({ where: { id: params.id } });
+        return NextResponse.json({ success: true });
+    } catch (err) {
+        console.error("[DELETE /api/habits/:id]", err);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
 }
