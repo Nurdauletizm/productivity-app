@@ -12,6 +12,8 @@ export const config = {
         "/board",
         "/calendar",
         "/goals",
-        "/goals/:path*"
+        "/goals/:path*",
+        "/habits",
+        "/settings"
     ]
 };

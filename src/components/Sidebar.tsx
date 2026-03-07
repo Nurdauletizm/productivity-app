@@ -21,11 +21,11 @@ export function Sidebar() {
     if (pathname === '/login') return null;
 
     const navigation = [
-        { name: "Dashboard", href: "/", icon: LayoutDashboard },
-        { name: "Goals", href: "/goals", icon: Target },
-        { name: "Board", href: "/board", icon: KanbanSquare },
-        { name: "Calendar", href: "/calendar", icon: Calendar },
-        { name: "Habits", href: "/habits", icon: Flame },
+        { name: "Обзор", href: "/", icon: LayoutDashboard },
+        { name: "Цели", href: "/goals", icon: Target },
+        { name: "Доска", href: "/board", icon: KanbanSquare },
+        { name: "Календарь", href: "/calendar", icon: Calendar },
+        { name: "Привычки", href: "/habits", icon: Flame },
     ];
 
     return (
@@ -87,7 +87,7 @@ export function Sidebar() {
                         className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 dark:text-zinc-400 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800/50 hover:text-black dark:hover:text-white transition-colors"
                     >
                         {theme === 'dark' ? <Sun className="w-5 h-5 text-gray-400 dark:text-zinc-500" /> : <Moon className="w-5 h-5 text-gray-400 dark:text-zinc-500" />}
-                        {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                        {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
                     </button>
                 )}
 
@@ -96,7 +96,7 @@ export function Sidebar() {
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 dark:text-zinc-400 rounded-md hover:bg-gray-50 dark:hover:bg-zinc-800/50 hover:text-black dark:hover:text-white transition-colors"
                 >
                     <Settings className="w-5 h-5 text-gray-400 dark:text-zinc-500" />
-                    Settings
+                    Настройки
                 </Link>
 
                 <button
@@ -104,7 +104,7 @@ export function Sidebar() {
                     className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 dark:text-zinc-400 rounded-md hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                 >
                     <LogOut className="w-5 h-5 text-gray-400 dark:text-zinc-500" />
-                    Log out
+                    Выйти
                 </button>
             </div>
         </div>

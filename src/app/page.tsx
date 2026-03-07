@@ -12,7 +12,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="flex h-full items-center justify-center bg-white dark:bg-[#121212] text-gray-400 dark:text-zinc-500 transition-colors">
-        Loading insights...
+        Загрузка...
       </div>
     );
   }
@@ -20,8 +20,8 @@ export default function Home() {
   return (
     <div className="flex flex-col h-full bg-[#fbfbfa] dark:bg-[#0a0a0a] transition-colors">
       <header className="px-8 py-6 border-b border-gray-100 dark:border-zinc-800 sticky top-0 bg-white/80 dark:bg-[#121212]/80 backdrop-blur-sm z-10 shrink-0 transition-colors">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100 tracking-tight">Dashboard Overview</h1>
-        <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Here is a snapshot of your productivity and upcoming goals.</p>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100 tracking-tight">Обзор</h1>
+        <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">Сводка вашей продуктивности и целей.</p>
       </header>
 
       <main className="flex-1 p-8 overflow-y-auto space-y-8">
@@ -30,7 +30,7 @@ export default function Home() {
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-6 shadow-sm flex flex-col justify-between transition-colors">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-gray-50 dark:bg-zinc-800 rounded-lg"><Target className="w-5 h-5 text-gray-600 dark:text-zinc-400" /></div>
-              <h3 className="font-medium text-gray-600 dark:text-zinc-400 text-sm">Total Tasks</h3>
+              <h3 className="font-medium text-gray-600 dark:text-zinc-400 text-sm">Всего задач</h3>
             </div>
             <p className="text-3xl font-semibold text-gray-900 dark:text-zinc-100">{metrics.totalTasks}</p>
           </div>
@@ -38,7 +38,7 @@ export default function Home() {
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-6 shadow-sm flex flex-col justify-between transition-colors">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg"><Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" /></div>
-              <h3 className="font-medium text-gray-600 dark:text-zinc-400 text-sm">In Progress</h3>
+              <h3 className="font-medium text-gray-600 dark:text-zinc-400 text-sm">В процессе</h3>
             </div>
             <p className="text-3xl font-semibold text-blue-600 dark:text-blue-400">{metrics.inProgressTasks}</p>
           </div>
@@ -46,7 +46,7 @@ export default function Home() {
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-6 shadow-sm flex flex-col justify-between transition-colors">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-green-50 dark:bg-green-900/30 rounded-lg"><CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" /></div>
-              <h3 className="font-medium text-gray-600 dark:text-zinc-400 text-sm">Completed</h3>
+              <h3 className="font-medium text-gray-600 dark:text-zinc-400 text-sm">Выполнено</h3>
             </div>
             <p className="text-3xl font-semibold text-green-600 dark:text-green-400">{metrics.completedTasks}</p>
           </div>
@@ -54,7 +54,7 @@ export default function Home() {
           <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-gray-100 dark:border-zinc-800 p-6 shadow-sm flex flex-col justify-between transition-colors">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 bg-orange-50 dark:bg-orange-900/30 rounded-lg"><TrendingUp className="w-5 h-5 text-orange-600 dark:text-orange-400" /></div>
-              <h3 className="font-medium text-gray-600 dark:text-zinc-400 text-sm">Completion Rate</h3>
+              <h3 className="font-medium text-gray-600 dark:text-zinc-400 text-sm">Процент выполнения</h3>
             </div>
             <p className="text-3xl font-semibold text-orange-600 dark:text-orange-400">{metrics.completionRate}%</p>
           </div>
@@ -72,16 +72,16 @@ export default function Home() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-red-500 dark:text-red-400" />
-                Upcoming Deadlines
+                Ближайшие дедлайны
               </h3>
               <Link href="/calendar" className="text-sm text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:underline transition-colors">
-                View Calendar
+                Календарь
               </Link>
             </div>
 
             <div className="space-y-3">
               {upcomingTasks.length === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-zinc-500 py-4 text-center">No urgent tasks due today or tomorrow. 🎉</p>
+                <p className="text-sm text-gray-400 dark:text-zinc-500 py-4 text-center">Нет срочных задач на сегодня или завтра. 🎉</p>
               ) : (
                 upcomingTasks.map(task => (
                   <div key={task.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors border border-transparent hover:border-gray-100 dark:hover:border-zinc-800 cursor-pointer">
@@ -96,7 +96,7 @@ export default function Home() {
                       </p>
                       {task.deadline && (
                         <p className="text-xs text-red-500 dark:text-red-400 mt-0.5">
-                          Due {format(parseISO(task.deadline), "MMM d")}
+                          Срок: {format(parseISO(task.deadline), "d MMM")}
                         </p>
                       )}
                     </div>
@@ -111,16 +111,16 @@ export default function Home() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-base font-semibold text-gray-900 dark:text-zinc-100 flex items-center gap-2">
                 <Target className="w-5 h-5 text-blue-500 dark:text-blue-400" />
-                Active Goals
+                Активные цели
               </h3>
               <Link href="/goals" className="text-sm text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white hover:underline transition-colors">
-                View All
+                Все цели
               </Link>
             </div>
 
             <div className="space-y-6">
               {goalsProgress.length === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-zinc-500 py-4 text-center">No goals tracked yet.</p>
+                <p className="text-sm text-gray-400 dark:text-zinc-500 py-4 text-center">Пока нет целей.</p>
               ) : (
                 goalsProgress.map(goal => (
                   <div key={goal.id} className="space-y-2">

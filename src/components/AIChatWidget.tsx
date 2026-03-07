@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -217,10 +216,14 @@ export function AIChatWidget() {
                                                             ) : (
                                                                 <ReactMarkdown
                                                                     components={{
-                                                                        p: ({ node, ...props }) => <p className="mb-2 last:mb-0" {...props} />,
-                                                                        strong: ({ node, ...props }) => <strong className="font-semibold text-indigo-900 dark:text-indigo-300" {...props} />,
-                                                                        ul: ({ node, ...props }) => <ul className="pl-4 space-y-1 mb-2 last:mb-0 list-none ml-0" {...props} />,
-                                                                        li: ({ node, ...props }) => <li className="relative pl-0 before:content-[''] before:absolute before:left-[-12px] before:top-[8px] before:w-[4px] before:h-[4px] before:bg-indigo-300 before:rounded-full" {...props} />,
+                                                                        // @ts-ignore - ReactMarkdown component type mismatch
+                                                                        p: ({ node, ...props }: any) => <p className="mb-2 last:mb-0" {...props} />,
+                                                                        // @ts-ignore
+                                                                        strong: ({ node, ...props }: any) => <strong className="font-semibold text-indigo-900 dark:text-indigo-300" {...props} />,
+                                                                        // @ts-ignore
+                                                                        ul: ({ node, ...props }: any) => <ul className="pl-4 space-y-1 mb-2 last:mb-0 list-none ml-0" {...props} />,
+                                                                        // @ts-ignore
+                                                                        li: ({ node, ...props }: any) => <li className="relative pl-0 before:content-[''] before:absolute before:left-[-12px] before:top-[8px] before:w-[4px] before:h-[4px] before:bg-indigo-300 before:rounded-full" {...props} />,
                                                                     }}
                                                                 >
                                                                     {m.content}
