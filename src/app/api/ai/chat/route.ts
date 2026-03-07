@@ -35,7 +35,7 @@ export async function POST(req: Request) {
         const { messages, goalId, localTimeStr } = await req.json();
 
         // Fetch user's current tasks and goals for AI context
-        const [userTasks, userGoals, userHabits] = await Promise.all([
+        const [userTasks, userGoals] = await Promise.all([
             prisma.task.findMany({
                 where: { userId: user.id },
                 orderBy: { createdAt: 'desc' },
@@ -55,12 +55,19 @@ export async function POST(req: Request) {
                     _count: { select: { tasks: true } }
                 }
             }),
-            prisma.habit.findMany({
+        ]);
+
+        // Fetch habits separately so a Prisma client mismatch doesn't break the whole chat
+        let userHabits: any[] = [];
+        try {
+            userHabits = await (prisma as any).habit.findMany({
                 where: { userId: user.id },
                 include: { logs: { orderBy: { date: 'desc' }, take: 30 } },
                 orderBy: { createdAt: 'asc' }
-            })
-        ]);
+            });
+        } catch {
+            // habit table not yet available in this environment — skip
+        }
 
         const today = new Date();
         const todayString = today.toLocaleDateString("ru-RU", {
