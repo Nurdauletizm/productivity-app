@@ -49,7 +49,7 @@ export default function RegisterPage() {
                     <Target className="w-6 h-6" />
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Create an Account</h1>
-                <p className="text-gray-500 text-sm mb-8 text-center">Join Lumina to organize your life.</p>
+                <p className="text-gray-500 text-sm mb-8 text-center">Join Clarity to organize your life.</p>
 
                 {error && (
                     <div className="w-full bg-red-50 text-red-600 p-3 rounded-xl text-sm mb-6 border border-red-100 text-center">
