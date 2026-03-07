@@ -9,8 +9,10 @@ import {
 import { useChat } from "@ai-sdk/react";
 import { mutate } from "swr";
 import ReactMarkdown from "react-markdown";
+import { usePathname } from "next/navigation";
 
 export function AIChatWidget() {
+    const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -102,6 +104,8 @@ export function AIChatWidget() {
             right: '2rem',
             zIndex: 9999,
         };
+
+    if (pathname === '/login' || pathname === '/register') return null;
 
     return (
         <>
