@@ -42,11 +42,11 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen bg-[#fbfbfa] flex items-center justify-center p-4">
             <div className="w-full max-w-sm bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center">
-                <div className="w-12 h-12 bg-black text-white rounded-xl flex items-center justify-center mb-6">
-                    <Target className="w-6 h-6" />
+                <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-xl flex items-center justify-center mb-6 shadow-sm">
+                    <span className="font-bold text-xl tracking-tight">NX</span>
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-                <p className="text-gray-500 text-sm mb-8 text-center">Sign in to manage your world with Clarity.</p>
+                <p className="text-gray-500 text-sm mb-8 text-center">Sign in to manage your world with Nizmix.</p>
 
                 {error && (
                     <div className="w-full bg-red-50 text-red-600 p-3 rounded-xl text-sm mb-6 border border-red-100 text-center">

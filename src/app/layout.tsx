@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Clarity",
+  title: "Nizmix",
   description: "Your intelligent productivity and goal-tracking platform.",
 };
 
