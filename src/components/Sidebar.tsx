@@ -29,15 +29,15 @@ export function Sidebar() {
 
     return (
         <div className="flex flex-col h-screen w-64 bg-white dark:bg-[#121212] border-r border-gray-200 dark:border-zinc-800 px-4 py-6 flex-shrink-0 transition-colors">
-            <div className="flex items-center gap-2 px-2 mb-10">
+            <div className="flex items-center gap-1.5 px-2 mb-10">
                 <Image
                     src="/nizmix-logo.png"
                     alt="Nizmix Logo"
-                    width={36}
-                    height={36}
-                    className="rounded-lg shrink-0"
+                    width={44}
+                    height={44}
+                    className="rounded-xl shrink-0"
                 />
-                <span className="font-semibold text-xl tracking-tight text-gray-900 dark:text-zinc-100">Nizmix</span>
+                <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-zinc-100">Nizmix</span>
             </div>
 
             <nav className="flex-1 space-y-1">
