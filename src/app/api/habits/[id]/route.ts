@@ -5,9 +5,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const { id } = await params;
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,12 +17,12 @@ export async function DELETE(
         const user = await prisma.user.findUnique({ where: { email: session.user.email } });
         if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-        const habit = await (prisma as any).habit.findUnique({ where: { id: params.id } });
+        const habit = await (prisma as any).habit.findUnique({ where: { id } });
         if (!habit || habit.userId !== user.id) {
             return NextResponse.json({ error: "Not found" }, { status: 404 });
         }
 
-        await (prisma as any).habit.delete({ where: { id: params.id } });
+        await (prisma as any).habit.delete({ where: { id } });
         return NextResponse.json({ success: true });
     } catch (err) {
         console.error("[DELETE /api/habits/:id]", err);
