@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Nizmix",
-  description: "Your intelligent productivity and goal-tracking platform.",
+  description: "Your intelligent AI-powered productivity platform.",
 };
 
 export default function RootLayout({

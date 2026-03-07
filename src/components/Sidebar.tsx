@@ -29,8 +29,8 @@ export function Sidebar() {
     return (
         <div className="flex flex-col h-screen w-64 bg-white dark:bg-[#121212] border-r border-gray-200 dark:border-zinc-800 px-4 py-6 flex-shrink-0 transition-colors">
             <div className="flex items-center gap-2 px-2 mb-10">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
-                    <span className="text-white font-bold text-sm tracking-tight">NX</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-lg flex items-center justify-center shadow-md shrink-0">
+                    <span className="text-white font-black text-sm tracking-tight">NX</span>
                 </div>
                 <span className="font-semibold text-xl tracking-tight text-gray-900 dark:text-zinc-100">Nizmix</span>
             </div>
